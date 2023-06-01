@@ -10,3 +10,7 @@ feller G21
 
 axa i feller M02
 hass M30
+
+TODO
+- multi select plików
+- konwersja z axa na inne typy

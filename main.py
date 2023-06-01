@@ -127,9 +127,8 @@ def toAXA(path):
         # extension .MPF
         fileExt = os.path.splitext(path)[1]
         if fileExt != ".MPF":
-            path = path.replace(fileExt, ".MPF")
+            path = path.replace(fileExt, "(AXA).MPF")
             editLog.append("Changed extension to .MPF")
-
 
         with open(path, "w") as file:
             file.write(filedata)
@@ -156,20 +155,17 @@ def toAXA(path):
         # at the end of the program we change M30 to M02
         filedata = filedata.replace("M30", "M02")
         editLog.append("M30 -> M02")
-        # extension .MPF
+        
+        # change name to name + (AXA) with extension .MPF
         fileExt = os.path.splitext(path)[1]
         if fileExt != ".MPF":
-            path = path.replace(fileExt, ".MPF")
+            path = path.replace(fileExt, "(AXA).MPF")
             editLog.append("Changed extension to .MPF")
-
 
         with open(path, "w") as file:
             file.write(filedata)
             editLog.append("Convertion succesfull!")  
         file.close()
-        
-
-    
 
 def toHass(path):
 # reverse of to feller

@@ -1,3 +1,12 @@
 Hass - N7 G01 G43 G58
 Feller - N7 G01 G43 G54
 axa - N7 G01 G54 G64
+
+HASS i FELLER komentarze ()
+axa ;
+
+axa i Hass G71
+feller G21
+
+axa i feller M02
+hass M30

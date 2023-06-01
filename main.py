@@ -91,14 +91,11 @@ def toFeller(path):
         filedata = filedata.replace("G43 G58","G43 G54") #tylko pierwsze narzędzie
         editLog.append("G43 G58 -> G43 G54")
 
-
         with open(path, "w") as file:
             file.write(filedata)
             editLog.append("Convertion succesfull!")
 
-
         file.close()
-
 
     elif GinputType == "AXA":
         # todo

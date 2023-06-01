@@ -200,25 +200,10 @@ def toHass(path):
 
         file.close()
     elif GinputType == "AXA":
-        #to do
+        #todo
         return
     
-
-
-
-    
-
-
-
-
-
-
-
-
-
 def convert(inputType):
-    
-    
     GoutputType = cncTypePick.currentText()
     if inputType == GoutputType:
         editLog.append("ERROR: Input and output type are the same")
@@ -245,21 +230,7 @@ def convert(inputType):
                         toFeller(Gpath)
     editLog.append("Done!")
     QMessageBox.about(window, "Done!", "Done!")
-
-
-                
-
-
-
-
-
-
-
-
-
-
-
-
+     
 App = QApplication(sys.argv)
 window = QWidget()
 #window settings
@@ -274,7 +245,6 @@ window.move(centerPoint.x() - 400, centerPoint.y() - 300)
 fileExt = ""
 toolNumber = 0
 clickCount = 0
-
 
 #labels
 title = qt.QtWidgets.QLabel(window)
@@ -351,13 +321,10 @@ cncTypePick.setFixedHeight(30)
 
 #show only unique CNC types
 
-
 cncTypePick.addItem("Pick CNC Type")
-
 cncTypePick.addItem("FELLER")
 cncTypePick.addItem("AXA")
 cncTypePick.addItem("HASS")
-
 cncTypePick.hide()
 
 #edit log
@@ -367,6 +334,6 @@ editLog.move(20, 200)
 editLog.setFixedWidth(760)
 editLog.setFixedHeight(390)
 
-    
+
 window.show()
 App.exec_()

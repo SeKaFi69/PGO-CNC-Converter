@@ -24,3 +24,6 @@ z HASS
 #- na końcu programu zamieniamy M30 na M02
 #- rozszerzenie programu .MPF
 
+
+na axe wykryj g43 na g54 g64
+

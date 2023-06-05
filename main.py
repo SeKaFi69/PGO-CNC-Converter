@@ -83,13 +83,20 @@ def toFeller(path):
         editLog.append(path)
         with open(path, "r") as file:
             filedata = file.read()
-
+        
         filedata = filedata.replace("G71", "G21")
         editLog.append("G71 -> G21")
         filedata = filedata.replace("M30", "M02")
         editLog.append("M30 -> M02")
         filedata = filedata.replace("G43 G58","G43 G54") #tylko pierwsze narzędzie
         editLog.append("G43 G58 -> G43 G54")
+
+        # extension .tap
+        fileExt = os.path.splitext(path)[1]
+        editLog.append("Extension is already .tap")
+        path = path.replace(fileExt, "(Feller).tap")
+
+        editLog.append("> Added (Feller) to name")
 
         with open(path, "w") as file:
             file.write(filedata)
@@ -98,15 +105,55 @@ def toFeller(path):
         file.close()
 
     elif GinputType == "AXA":
-        # todo
-        return
+        editLog.append("=-=-= Converting from AXA to Feller =-=-=")
+        editLog.append(path)
+        with open(path, "r") as file:
+            filedata = file.read()
+        
+        
+        filedata = filedata.replace("G54 G64", "G43 G54")
+        editLog.append("G54 G64 -> G43 G54")
+        
+        filedata = filedata.replace("G71", "G21")
+        editLog.append("G71 -> G21")
+
+
+        #get filedata until first N1 -1 line
+        filedataSmall = filedata.split("N1")[0]
+        #delete empty lines
+        filedataSmall = filedataSmall.replace("\n\n", "\n")
+        editLog.append("Deleted empty lines")
+
+        filedataSmall = filedataSmall.replace(";", "(")
+        filedataSmall = filedataSmall.replace("\n", ")\n")
+       
+        editLog.append("Replaced ; with ( )")
+
+       
+
+        filedata = filedata.replace(filedata.split("N1")[0], filedataSmall)
+
+        # extension .tap
+        fileExt = os.path.splitext(path)[1]
+        if fileExt != ".tap":
+            path = path.replace(fileExt, "(Feller).tap")
+            editLog.append("Changed extension to .tap")
+
+        # add % at the beginning and end of the program
+        filedata = "%\n" + filedata + "\n%"
+        editLog.append("> Added % at the beginning and end of the program")
+
+        with open(path, "w") as file:
+            file.write(filedata)
+            editLog.append("Convertion succesfull!")
+        file.close()
 
 def toAXA(path):
     if GinputType == "HASS":
         editLog.append("=-=-= Converting from HASS to AXA =-=-=")
         editLog.append(path)
         with open(path, "r") as file:
-            filedata = file.read()
+                    filedata = file.read()
         # delete % at the beginning and end of the program
         filedata = filedata.replace("%", "")
         editLog.append("Deleted % at the beginning and end of the program")
@@ -114,10 +161,16 @@ def toAXA(path):
         filedata = filedata.replace("G43 G58", "G54 G64")
         editLog.append("G43 G58 -> G54 G64")
 
+
         filedata = filedata.replace("(", ";")
         filedata = filedata.replace(")", "")
+        editLog.append("Replaced ( with ; and deleted )")
+
+        if ";;" in filedata:
+            filedata = filedata.replace(";;", ";")
+            editLog.append("Removed double ;")
         
-        editLog.append("Added ; before the description so that the machine does not read it")
+        editLog.append("> Added ; before the description so that the machine does not read it")
         # at the end of the program we change M30 to M02
         filedata = filedata.replace("M30", "M02")
         editLog.append("M30 -> M02")
@@ -137,7 +190,7 @@ def toAXA(path):
         editLog.append("=-=-= Converting from Feller to AXA =-=-=")
         editLog.append(path)
         with open(path, "r") as file:
-            filedata = file.read()
+                    filedata = file.read()
         # delete % at the beginning and end of the program
         filedata = filedata.replace("%", "")
         editLog.append("Deleted % at the beginning and end of the program")
@@ -148,7 +201,8 @@ def toAXA(path):
         filedata = filedata.replace("(", ";")
         filedata = filedata.replace(")", "")
         
-        editLog.append("Added ; before the description so that the machine does not read it")
+        
+        editLog.append("> Added ; before the description so that the machine does not read it")
         # at the end of the program we change M30 to M02
         filedata = filedata.replace("M30", "M02")
         editLog.append("M30 -> M02")
@@ -172,7 +226,7 @@ def toHass(path):
         editLog.append(path)
         with open(path, "r") as file:
             filedata = file.read()
-
+        
         filedata = filedata.replace("G21", "G71")
         editLog.append("G21 -> G71")
         
@@ -182,10 +236,15 @@ def toHass(path):
         filedata = filedata.replace("M02", "M30")
         editLog.append("M02 -> M30")
 
+        # edit path (HASS)
+
+        editLog.append("Extension is already .tap")
         fileExt = os.path.splitext(path)[1]
-        if fileExt != ".tap":
-            path = path.replace(fileExt, ".tap")
-            editLog.append("Changed extension to .tap")
+
+        
+        path = path.replace(fileExt, "(HASS).tap")
+        editLog.append("(> Added (HASS) to the name)")
+        
 
         with open(path, "w") as file:
             file.write(filedata)
@@ -193,8 +252,56 @@ def toHass(path):
 
         file.close()
     elif GinputType == "AXA":
-        #todo
-        return
+        
+        editLog.append("=-=-= Converting from AXA to HASS =-=-=")
+        editLog.append(path)
+        with open(path, "r") as file:
+            filedata = file.read()
+        
+        filedata = filedata.replace("G54 G64", "G43 G58")
+        editLog.append("G54 G64 -> G43 G58")
+
+        filedata = filedata.replace("M02", "M30")
+        editLog.append("M02 -> M30")
+
+        fileExt = os.path.splitext(path)[1]
+        if fileExt != ".tap":
+            path = path.replace(fileExt, "(HASS).tap")
+            editLog.append("Changed extension to .tap")
+        
+         #get filedata until first N1 -1 line
+        filedataSmall = filedata.split("N1")[0]
+        #delete empty lines
+        filedataSmall = filedataSmall.replace("\n\n", "\n")
+        editLog.append("Deleted empty lines")
+
+        filedataSmall = filedataSmall.replace(";", "(")
+        filedataSmall = filedataSmall.replace("\n", ")\n")
+       
+        editLog.append("Replaced ; with ( )")
+
+        filedata = filedata.replace(filedata.split("N1")[0], filedataSmall)
+
+        filedata = "%\n" + filedata + "\n%"
+        editLog.append("> Added % at the beginning and end of the program")    
+
+
+        with open(path, "w") as file:
+            file.write(filedata)
+            editLog.append("Convertion succesfull!")
+        #add % at the beginning and end of the program
+
+
+
+        file.close()
+
+
+
+        
+        
+
+        
+        
     
 def convert(inputType):
     GoutputType = cncTypePick.currentText()

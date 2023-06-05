@@ -253,7 +253,7 @@ def toHass(path):
         file.close()
     elif GinputType == "AXA":
         
-        editLog.append("=-=-= Converting from AXA to HASS =-=-=")
+        editLog.append("=-=-= Conve rting from AXA to HASS =-=-=")
         editLog.append(path)
         with open(path, "r") as file:
             filedata = file.read()

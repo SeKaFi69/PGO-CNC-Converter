@@ -16,7 +16,8 @@ def errorText(text):
     return f"<p style='color: #ff0000; margin: 0; padding: 0;'>{text}</p>"
 def orangeText(text):
     return f"<p style='color: #ffba7a; margin: 0; padding: 0;'>{text}</p>"
-
+def greenText(text):
+    return f"<p style='color: #33ff88; margin: 0; padding: 0;'>{text}</p>"
 
 def appendData(filetextPath, fileExt):
     editLog.append("Dołączanie pliku...")
@@ -80,7 +81,7 @@ def selectFile():
         recognizeFile(file)
         editLog.append(blueText(f"Rozpoznano plik jako {GinputType}"))
         
-        preview.append(f"<p style='margin:0;padding:0;color: #ffba7a;'>Przed konwertem: {GinputType}</p>")        
+        preview.append(f"<p style='margin:0;padding:0;color: #ffba7a;'>Przed konwertem: {GinputType}</p>")  
 
         searchItems= ["G71", "G21", "M02", "M30", "N7 G01 G43 G58", "N7 G01 G43 G54", "N7 G01 G54 G64"]
         searchStrategy = "normal"
@@ -94,8 +95,17 @@ def selectFile():
                         for item in searchItems:
                             if item in line:
                                 if item not in preview.toPlainText():
-                                    preview.append(item)        
+                                    preview.append(item) 
+                                    match item:
+                                        case "G43 G54":
+                                            GinputType = "FELLER"
+                                        case "G43 G58":
+                                            GinputType = "HASS"
+                                        case "G54 G64":
+                                            GinputType = "AXA"                        
         preview.append(GfileExt)
+        preview.append("")   
+        preview.append("")   
 
         if GinputType == "FELLER":
             cncTypePick.addItem("AXA")
@@ -142,7 +152,7 @@ def selectDestination():
 
             elif x == QMessageBox.No:
                 editLog.append("Anulowano zapisywanie folderu docelowego!")
-                editLog.append(errorText(f"Folder docelowy: {folder}"))
+                editLog.append(blueText(f"Folder docelowy: {folder}"))
                 Gfolder = folder
                 return
 
@@ -152,6 +162,8 @@ def selectDestination():
         return
 
 def selectSource():
+    if editLog.toPlainText() != "":
+        editLog.append(Text(""))
     #select folder in which file will be saved
     editLog.append("Wybieranie folderu źródłowego...")
     folder = QFileDialog.getExistingDirectory(None, "Wybierz folder źródłowy", "")
@@ -175,9 +187,10 @@ def selectSource():
             textSource.setText(f"Źródło: {folder}")
 
             editLog.append("Zapisano folder źródłowy!")
+            editLog.append(Text(""))
         elif x == QMessageBox.No:
             editLog.append("Anulowano zapisywanie folderu źródłowego!")
-            editLog.append(errorText(f"Folder źródłowy: {folder}"))
+            editLog.append(blueText(f"Folder źródłowy: {folder}"))
             Gsource = folder
             return
 
@@ -196,39 +209,36 @@ def toHass(path):
     editLog.append(Text("Usunięto puste linie"))
 
     #przygotowanie pliku
-    filedataSmall = filedata.split("N1")[0]
-    filedataBig = filedata.split("N1")[1]
+    filedataSmall = filedata.split("N1 ")[0]
     
     #komentarze ()
-    filedataSmall = filedataSmall.replace(";", "(")
+    if ";" in filedataSmall:
+        filedataSmall = filedataSmall.replace(";", "(")
+        filedataSmall = filedataSmall.replace("\n", ")\n")
 
-    while "((" in filedataSmall:
-        filedataSmall = filedataSmall.replace("((", "(")
+        editLog.append(Text("Zamieniono komentarze z ; na ()"))
 
-    for line in filedataSmall:
-        if line.startswith("("):
-            line = line + ")"
-    editLog.append(Text("Zamieniono komentarze z ; na ()"))
+        while "((" in filedataSmall:
+            filedataSmall = filedataSmall.replace("((", "(")
 
     # zamien filedataSmall
-    filedata = filedata.replace(filedata.split("N1")[0], filedataSmall)
+    filedata = filedata.replace(filedata.split("N1 ")[0], filedataSmall)
 
     # konwersja G43 G58, G71, M30
-    if "G54 G64" or "G43 G54" or "G21" or "M02" in filedataBig:
-        filedataBig = filedataBig.replace("G54 G64", "G43 G58")
-        filedataBig = filedataBig.replace("G43 G54", "G43 G58")
-        filedataBig = filedataBig.replace("G21", "G71")
-        filedataBig = filedataBig.replace("M02", "M30")
+    if "G54 G64" or "G43 G54" or "G21" or "M02" in filedata:
+        filedata = filedata.replace("G54 G64", "G43 G58")
+        filedata = filedata.replace("G43 G54", "G43 G58")
+        filedata = filedata.replace("G21", "G71")
+        filedata = filedata.replace("M02", "M30")
     editLog.append(blueText("> G43 G58"))
     editLog.append(blueText("> G71"))
     editLog.append(blueText("> M30"))
 
-    # zamien filedataBig
-    filedata = filedata.replace(filedata.split("N1")[1], filedataBig)
+    
 
     # % na początku i końcu
-    if "%" not in filedataBig:
-        filedataBig = "%" + filedataBig + "%"
+    if "%" not in filedata:
+        filedata = "%\n" + filedata + "\n%"
     editLog.append(Text("Dodano % na początku i końcu programu"))
 
     # nazwa pliku
@@ -236,7 +246,7 @@ def toHass(path):
 
     if "(AXA)" in fileName:
         path = path.replace("(AXA)", "(HASS)")
-    elif "(HASS)" in fileName:
+    elif "(Feller)" in fileName:
         path = path.replace("(Feller)", "(HASS)")
     elif "(HASS)" not in fileName:
         path = path.replace(fileName, fileName + "(HASS)")
@@ -246,7 +256,7 @@ def toHass(path):
     # rozszerzenie .tap
     fileExt = os.path.splitext(path)[1]
     if fileExt == ".tap":
-        editLog.append(errorText("Rozszerzenie jest już .tap"))
+        editLog.append(Text("Rozszerzenie jest już .tap"))
     else:
         path = path.replace(fileExt, ".tap")
         editLog.append(Text("Zmieniono rozszerzenie na .tap"))
@@ -259,15 +269,19 @@ def toHass(path):
         pathSplit[0] = Gfolder
     path = pathSplit[0] + "/" + pathSplit[1]
     
+    global Gpath
+    Gpath = path
+
+    # zapis
     with open(path, "w") as file:
         file.write(filedata)
-        editLog.append("Plik zmnieniony pomyślnie!")
+        editLog.append(greenText("Plik zmnieniony pomyślnie!"))
         editLog.append(orangeText(f"Zapisano w: {path}"))
     file.close()
     return path
 
 def toFeller(path):
-    editLog.append(blueText("=-=-= Konwertowanie na HASS =-=-="))
+    editLog.append(blueText("=-=-= Konwertowanie na Feller =-=-="))
     editLog.append(path)
     with open(path, "r") as file:
         filedata = file.read()
@@ -277,39 +291,39 @@ def toFeller(path):
     editLog.append(Text("Usunięto puste linie"))
 
     #przygotowanie pliku
-    filedataSmall = filedata.split("N1")[0]
-    filedataBig = filedata.split("N1")[1]
+    filedataSmall = filedata.split("N1 ")[0]
+    if ")" in filedataSmall:
+        filedataSmall = filedataSmall.replace(";", "")
+        
     
     #komentarze ()
-    filedataSmall = filedataSmall.replace(";", "(")
+    if ";" in filedataSmall:
+        filedataSmall = filedataSmall.replace(";", "(")
+        filedataSmall = filedataSmall.replace("\n", ")\n")
 
-    while "((" in filedataSmall:
-        filedataSmall = filedataSmall.replace("((", "(")
+        editLog.append(Text("Zamieniono komentarze z ; na ()"))
 
-    for line in filedataSmall:
-        if line.startswith("("):
-            line = line + ")"
-    editLog.append(Text("Zamieniono komentarze z ; na ()"))
+        while "((" in filedataSmall:
+            filedataSmall = filedataSmall.replace("((", "(")
 
     # zamien filedataSmall
-    filedata = filedata.replace(filedata.split("N1")[0], filedataSmall)
+    filedata = filedata.replace(filedata.split("N1 ")[0], filedataSmall)
 
     # konwersja G43 G54, G21, M02
-    if "G54 G64" or "G43 G58" or "G71" or "M30" in filedataBig:
-        filedataBig = filedataBig.replace("G54 G64", "G43 G54")
-        filedataBig = filedataBig.replace("G43 G58", "G43 G54")
-        filedataBig = filedataBig.replace("G71", "G21")
-        filedataBig = filedataBig.replace("M30", "M02")
+    if "G54 G64" or "G43 G58" or "G71" or "M30" in filedata:
+        filedata = filedata.replace("G54 G64", "G43 G54")
+        filedata = filedata.replace("G43 G58", "G43 G54")
+        filedata = filedata.replace("G71", "G21")
+        filedata = filedata.replace("M30", "M02")
     editLog.append(blueText("> G43 G54"))
     editLog.append(blueText("> G21"))
     editLog.append(blueText("> M02"))
 
-    # zamien filedataBig
-    filedata = filedata.replace(filedata.split("N1")[1], filedataBig)
+    
 
     # % na początku i końcu
-    if "%" not in filedataBig:
-        filedataBig = "%" + filedataBig + "%"
+    if "%" not in filedata:
+        filedata = "%\n" + filedata + "\n%"
     editLog.append(Text("Dodano % na początku i końcu programu"))
 
     # nazwa pliku
@@ -327,7 +341,7 @@ def toFeller(path):
     # rozszerzenie .tap
     fileExt = os.path.splitext(path)[1]
     if fileExt == ".tap":
-        editLog.append(errorText("Rozszerzenie jest już .tap"))
+        editLog.append(Text("Rozszerzenie jest już .tap"))
     else:
         path = path.replace(fileExt, ".tap")
         editLog.append(Text("Zmieniono rozszerzenie na .tap"))
@@ -340,10 +354,13 @@ def toFeller(path):
         pathSplit[0] = Gfolder
     path = pathSplit[0] + "/" + pathSplit[1]
 
+    global Gpath
+    Gpath = path
+
     # zapis
     with open(path, "w") as file:
         file.write(filedata)
-        editLog.append("Plik zmnieniony pomyślnie!")
+        editLog.append(greenText("Plik zmnieniony pomyślnie!"))
         editLog.append(orangeText(f"Zapisano w: {path}"))
     file.close()
 
@@ -360,40 +377,42 @@ def toAXA(path):
     editLog.append(Text("Usunięto puste linie"))
 
     #przygotowanie pliku
-    filedataSmall = filedata.split("N1")[0]
-    filedataBig = filedata.split("N1")[1]
-    
+    filedataSmall = filedata.split("N1 ")[0]
     #komentarze ;
     filedataSmall = filedataSmall.replace("(", ";")
 
-    filedataSmall = filedataSmall.replace(")", ";")
+    filedataSmall = filedataSmall.replace(")", "")
 
     while ";;" in filedataSmall:
         filedataSmall = filedataSmall.replace(";;", ";")
-
-   
+    
     editLog.append(Text("Zamieniono komentarze z () na ;"))
 
+    # początek programu
+    for line in filedataSmall.splitlines():
+        if line.startswith("O"):
+            editLog.append(Text(f"Usunięto początku programu: {line}"))
+            filedataSmall = filedataSmall.replace(f"{line}\n", "")
+            break
     # zamien filedataSmall
-    filedata = filedata.replace(filedata.split("N1")[0], filedataSmall)
+    filedata = filedata.replace(filedata.split("N1 ")[0], filedataSmall)
 
     # konwersja G54 G64, G71, M02
-    if "G43 G54" or "G43 G58" or "G21" or "M30" in filedataBig:
-        filedataBig = filedataBig.replace("G43 G54", "G54 G64")
-        filedataBig = filedataBig.replace("G43 G58", "G54 G64")
-        filedataBig = filedataBig.replace("G21", "G71")
-        filedataBig = filedataBig.replace("M02", "M30")
+
+    filedata = filedata.replace('G54 ', '')
+    filedata = filedata.replace('G58 ', '')
+    filedata = filedata.replace('G43', 'G54 G64')
+    filedata = filedata.replace('G21', 'G71')
+    filedata = filedata.replace('M02', 'M30')
+
     editLog.append(blueText("> G54 G64"))
     editLog.append(blueText("> G71"))
     editLog.append(blueText("> M30"))
 
-    # zamien filedataBig
-    filedata = filedata.replace(filedata.split("N1")[1], filedataBig)
-
     # usun % na początku i końcu
-    if "%" in filedataBig:
-        filedataBig = filedataBig.replace("%\n", "")
-        filedataBig = filedataBig.replace("\n%", "")
+    if "%" in filedata:
+        filedata = filedata.replace("%\n", "")
+        filedata = filedata.replace("\n%", "")
     editLog.append(Text("Usunięto % na początku i końcu programu"))
 
     # nazwa pliku
@@ -411,7 +430,7 @@ def toAXA(path):
     # rozszerzenie .MPF
     fileExt = os.path.splitext(path)[1]
     if fileExt == ".MPF":
-        editLog.append(errorText("Rozszerzenie jest już .MPF"))
+        editLog.append(Text("Rozszerzenie jest już .MPF"))
     else:
         path = path.replace(fileExt, ".MPF")
         editLog.append(Text("Zmieniono rozszerzenie na .MPF"))
@@ -424,13 +443,16 @@ def toAXA(path):
         pathSplit[0] = Gfolder
     path = pathSplit[0] + "/" + pathSplit[1]
 
+    global Gpath
+    Gpath = path      
+
     # zapis
     with open(path, "w") as file:
         file.write(filedata)
-        editLog.append("Plik zmnieniony pomyślnie!")
+        editLog.append(greenText("Plik zmnieniony pomyślnie!"))
         editLog.append(orangeText(f"Zapisano w: {path}"))
     file.close()
-    return path
+    
 
 def convert(inputType):
     global GoutputType
@@ -448,6 +470,7 @@ def convert(inputType):
         return
     
     else:
+
         preview.append(blueText("=-=-= Konwertowanie =-=-="))
         preview.append(orangeText("Ścieżka pliku: ") + Gpath)
         preview.append(orangeText("Typ pliku wejściowego: ") + GinputType)
@@ -455,6 +478,7 @@ def convert(inputType):
         preview.append(blueText("=-=-=-=-=-=-=-=-=-=-=-=-="))
         preview.append(orangeText(f"Po konwersji: {GoutputType}"))
 
+        
         match GoutputType:
             case "FELLER":
                 toFeller(Gpath)
@@ -478,25 +502,34 @@ def convert(inputType):
                 preview.append(blueText(f.hass[1]))
                 preview.append(blueText(f.hass[2]))
                 preview.append(blueText(GoutputExt))
-                
+    preview.append("")
 
+    editLog.append(Text(""))
     # potwierdzenie zakończenia
     msg = QMessageBox()
     msg.setWindowTitle("Zakończono!")
-    msg.setText("Konwertowanie zakończone!")
     msg.setIcon(QMessageBox.Information)
-    msg.exec_()
+
+    msg.setText("Konwertowanie zakończone!")
+    msg.setInformativeText("Otworzyć plik?")    
+    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+    msg.setDefaultButton(QMessageBox.Yes)
+
+    if msg.exec_() == QMessageBox.Yes:
+        os.startfile(Gpath)
+    else:
+        return
     return
      
 App = QApplication(sys.argv)
 
 #window
 window = QWidget()
-window.setGeometry(100, 100, 1000, 600)
+window.setGeometry(100, 100, 1000, 700)
 window.setStyleSheet("background-color: #2b2b2b; color: #ffffff;")
 window.setWindowTitle('Feller AXA Hass CNC Program Converter')
 centerPoint = qt.QtWidgets.QDesktopWidget().availableGeometry().center()
-window.move(centerPoint.x() - 400, centerPoint.y() - 300)
+window.move(centerPoint.x() - 400, centerPoint.y() - 400)
 
 #variables
 
@@ -604,7 +637,7 @@ editLog.setStyleSheet("QTextEdit {color: #ffba7a;}")
 editLog.setReadOnly(True)
 editLog.move(330, 220)
 editLog.setFixedWidth(660)
-editLog.setFixedHeight(360)
+editLog.setFixedHeight(460)
 editLog.setStyleSheet("border: 2px solid #ffba7a; color: #fff; font-weight: bold; text-align: center; width: 100%;")
 
 #label for editlog
@@ -621,7 +654,7 @@ preview.setFont(qt.QtGui.QFont('Arial', 10))
 preview.move(20, 220)
 preview.setStyleSheet("border: 2px solid #52fffc; color: #fff; font-weight: bold; text-align: center; width: 100%;")
 preview.setFixedWidth(300)
-preview.setFixedHeight(360)
+preview.setFixedHeight(460)
 
 #label for preview
 previewLabel = qt.QtWidgets.QLabel(window)

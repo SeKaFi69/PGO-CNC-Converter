@@ -241,6 +241,9 @@ def toHass(path):
         filedata = "%\n" + filedata + "\n%"
     editLog.append(Text("Dodano % na początku i końcu programu"))
 
+    if "\n\n" in filedata:
+        filedata = filedata.replace("\n\n", "\n")
+        editLog.append(errorText("Znaleziono pustą linie, która została już usunięta"))
     # nazwa pliku
     fileName = os.path.splitext(path)[0]
 
@@ -326,6 +329,10 @@ def toFeller(path):
         filedata = "%\n" + filedata + "\n%"
     editLog.append(Text("Dodano % na początku i końcu programu"))
 
+    if "\n\n" in filedata:
+        filedata = filedata.replace("\n\n", "\n")
+        editLog.append(errorText("Znaleziono pustą linie, która została już usunięta"))
+
     # nazwa pliku
     fileName = os.path.splitext(path)[0]
 
@@ -403,11 +410,11 @@ def toAXA(path):
     filedata = filedata.replace('G58 ', '')
     filedata = filedata.replace('G43', 'G54 G64')
     filedata = filedata.replace('G21', 'G71')
-    filedata = filedata.replace('M02', 'M30')
+    filedata = filedata.replace('M30', 'M02')
 
     editLog.append(blueText("> G54 G64"))
     editLog.append(blueText("> G71"))
-    editLog.append(blueText("> M30"))
+    editLog.append(blueText("> M02"))
 
     # usun % na początku i końcu
     if "%" in filedata:
@@ -415,6 +422,9 @@ def toAXA(path):
         filedata = filedata.replace("\n%", "")
     editLog.append(Text("Usunięto % na początku i końcu programu"))
 
+    if "\n\n" in filedata:
+        filedata = filedata.replace("\n\n", "\n")
+        editLog.append(errorText("Znaleziono pustą linie, która została już usunięta"))
     # nazwa pliku
     fileName = os.path.splitext(path)[0]
 
